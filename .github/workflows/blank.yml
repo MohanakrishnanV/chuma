@@ -1,7 +1,7 @@
 name: Environment Demo
 
 on:
-  pull_request:
+  push:
     branches:
       - dev
 
@@ -11,6 +11,7 @@ jobs:
 
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
+      fe_environment: ${{ steps.set-env.outputs.fe_environment }}
 
     steps:
       - name: Determine Environment
@@ -19,9 +20,7 @@ jobs:
           case "${{ github.base_ref }}" in
             dev)
               ENVIRONMENT="dev"
-              ;;
-            fedev)
-              ENVIRONMENT="fedev"
+              FE_ENVIRONMENT="fedev"
               ;;
             *)
               echo "Unsupported target branch"
@@ -30,6 +29,7 @@ jobs:
           esac
 
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "fe_environment=$FE_ENVIRONMENT" >> $GITHUB_OUTPUT
 
   hello_world:
     needs: target_env
@@ -43,3 +43,16 @@ jobs:
         run: |
           echo "Hello World"
           echo "Environment: ${{ needs.target_env.outputs.environment }}"
+
+  fe_hello_world:
+    needs: target_env
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ needs.target_env.outputs.fe_environment }}
+
+    steps:
+      - name: Print FE Environment
+        run: |
+          echo "Hello World"
+          echo "Environment: ${{ needs.target_env.outputs.fe_environment }}"
