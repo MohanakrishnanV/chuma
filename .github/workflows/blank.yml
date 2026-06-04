@@ -1,0 +1,45 @@
+name: Environment Demo
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  target_env:
+    runs-on: ubuntu-latest
+
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+
+    steps:
+      - name: Determine Environment
+        id: set-env
+        run: |
+          case "${{ github.base_ref }}" in
+            dev)
+              ENVIRONMENT="dev"
+              ;;
+            fedev)
+              ENVIRONMENT="fedev"
+              ;;
+            *)
+              echo "Unsupported target branch"
+              exit 1
+              ;;
+          esac
+
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+
+  hello_world:
+    needs: target_env
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ needs.target_env.outputs.environment }}
+
+    steps:
+      - name: Print Environment
+        run: |
+          echo "Hello World"
+          echo "Environment: ${{ needs.target_env.outputs.environment }}"
